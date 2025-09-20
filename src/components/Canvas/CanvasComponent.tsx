@@ -1,0 +1,154 @@
+import type { ComponentInstance } from "@/types";
+import type { MouseEvent } from "react";
+import Image from "next/image";
+
+interface CanvasComponentProps {
+  component: ComponentInstance;
+  isSelected: boolean;
+  isPreviewMode: boolean;
+  onSelect: () => void;
+}
+
+export const CanvasComponent = ({
+  component,
+  isSelected,
+  isPreviewMode,
+  onSelect,
+}: CanvasComponentProps) => {
+  const handleClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (!isPreviewMode) {
+      onSelect();
+    }
+  };
+
+  const renderComponent = () => {
+    const { type, properties } = component;
+    const currentState =
+      component.states.find((s) => s.id === component.currentState) ||
+      component.states[0];
+    const currentProps = currentState
+      ? { ...properties, ...currentState.properties }
+      : properties;
+
+    // 타입 안전성을 위한 헬퍼 함수
+    const getProp = (
+      key: string,
+      defaultValue: string | number | boolean = ""
+    ) => {
+      const value = currentProps[key as keyof typeof currentProps];
+      return value !== undefined ? value : defaultValue;
+    };
+
+    switch (type) {
+      case "text":
+        return (
+          <div
+            className="p-2 text-gray-800"
+            style={{
+              fontSize: getProp("fontSize", "14px") as string,
+              color: getProp("color", "#374151") as string,
+              fontWeight: getProp("fontWeight", "normal") as string,
+            }}
+          >
+            {getProp("text", "텍스트") as string}
+          </div>
+        );
+
+      case "button":
+        return (
+          <button
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              getProp("variant", "primary") === "secondary"
+                ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+            }`}
+            disabled={getProp("disabled", false) as boolean}
+            style={{
+              backgroundColor: getProp("backgroundColor", "#3b82f6") as string,
+              color: getProp("textColor", "#ffffff") as string,
+            }}
+          >
+            {getProp("text", "버튼") as string}
+          </button>
+        );
+
+      case "input":
+        return (
+          <input
+            type={getProp("inputType", "text") as string}
+            placeholder={getProp("placeholder", "입력하세요") as string}
+            className={`px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              getProp("hasError", false)
+                ? "border-red-500 bg-red-50"
+                : "border-gray-300 bg-white"
+            }`}
+            disabled={getProp("disabled", false) as boolean}
+            style={{
+              width: getProp("width", "200px") as string,
+            }}
+          />
+        );
+
+      case "image":
+        return (
+          <div
+            className="bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center relative"
+            style={{
+              width: getProp("width", "150px") as string,
+              height: getProp("height", "100px") as string,
+            }}
+          >
+            {getProp("src", "") ? (
+              <Image
+                src={getProp("src", "") as string}
+                alt={getProp("alt", "이미지") as string}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            ) : (
+              <span className="text-gray-500 text-sm">이미지</span>
+            )}
+          </div>
+        );
+
+      default:
+        return (
+          <div className="p-2 bg-gray-100 text-gray-600">
+            알 수 없는 컴포넌트
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div
+      className={`absolute cursor-pointer ${
+        isSelected && !isPreviewMode ? "ring-2 ring-blue-500 ring-offset-2" : ""
+      }`}
+      style={{
+        left: component.x,
+        top: component.y,
+        width: component.width,
+        height: component.height,
+      }}
+      onClick={handleClick}
+    >
+      {renderComponent()}
+
+      {/* 선택된 컴포넌트의 핸들 */}
+      {isSelected && !isPreviewMode && (
+        <>
+          {/* 리사이즈 핸들 */}
+          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize" />
+
+          {/* 컴포넌트 라벨 */}
+          <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+            {component.type}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
