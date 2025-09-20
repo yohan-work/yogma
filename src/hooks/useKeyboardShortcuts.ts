@@ -4,10 +4,16 @@ import { useProjectStore } from "@/stores/useProjectStore";
 export const useKeyboardShortcuts = () => {
   const {
     selectedComponentId,
+    selectedComponentIds,
+    selectedGroupId,
     components,
+    groups,
     deleteComponent,
     updateComponent,
     addComponent,
+    createGroup,
+    ungroupComponents,
+    deleteGroup,
   } = useProjectStore();
 
   useEffect(() => {
@@ -27,17 +33,41 @@ export const useKeyboardShortcuts = () => {
       // Ctrl/Cmd 키 조합
       const isCtrlOrCmd = e.ctrlKey || e.metaKey;
 
-      // Delete 키 - 선택된 컴포넌트 삭제
-      if (e.key === "Delete" && selectedComponentId) {
+      // 그룹 생성 (Ctrl/Cmd + G)
+      if (isCtrlOrCmd && e.key === "g" && selectedComponentIds.length > 1) {
         e.preventDefault();
-        deleteComponent(selectedComponentId);
+        createGroup(selectedComponentIds, `그룹 ${groups.length + 1}`);
         return;
       }
 
-      // Backspace 키 - 선택된 컴포넌트 삭제
-      if (e.key === "Backspace" && selectedComponentId) {
+      // 그룹 해제 (Ctrl/Cmd + Shift + G)
+      if (isCtrlOrCmd && e.shiftKey && e.key === "G" && selectedGroupId) {
         e.preventDefault();
-        deleteComponent(selectedComponentId);
+        ungroupComponents(selectedGroupId);
+        return;
+      }
+
+      // Delete 키 - 선택된 컴포넌트 또는 그룹 삭제
+      if (e.key === "Delete") {
+        e.preventDefault();
+        if (selectedGroupId) {
+          // 그룹 삭제 (그룹 해제)
+          ungroupComponents(selectedGroupId);
+        } else if (selectedComponentId) {
+          deleteComponent(selectedComponentId);
+        }
+        return;
+      }
+
+      // Backspace 키 - 선택된 컴포넌트 또는 그룹 삭제
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        if (selectedGroupId) {
+          // 그룹 삭제 (그룹 해제)
+          ungroupComponents(selectedGroupId);
+        } else if (selectedComponentId) {
+          deleteComponent(selectedComponentId);
+        }
         return;
       }
 
@@ -101,36 +131,81 @@ export const useKeyboardShortcuts = () => {
         return;
       }
 
-      // 화살표 키 - 선택된 컴포넌트 이동
-      if (
-        selectedComponentId &&
-        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)
-      ) {
+      // Ctrl/Cmd + G - 그룹 생성
+      if (isCtrlOrCmd && e.key === "g" && selectedComponentIds.length > 1) {
         e.preventDefault();
-        const selectedComponent = components.find(
-          (c) => c.id === selectedComponentId
-        );
-        if (selectedComponent && !selectedComponent.locked) {
-          const step = e.shiftKey ? 10 : 1; // Shift 키로 큰 단위 이동
-          let newX = selectedComponent.x;
-          let newY = selectedComponent.y;
+        createGroup(selectedComponentIds);
+        return;
+      }
 
-          switch (e.key) {
-            case "ArrowUp":
-              newY -= step;
-              break;
-            case "ArrowDown":
-              newY += step;
-              break;
-            case "ArrowLeft":
-              newX -= step;
-              break;
-            case "ArrowRight":
-              newX += step;
-              break;
+      // Ctrl/Cmd + Shift + G - 그룹 해제
+      if (isCtrlOrCmd && e.shiftKey && e.key === "G" && selectedGroupId) {
+        e.preventDefault();
+        ungroupComponents(selectedGroupId);
+        return;
+      }
+
+      // 화살표 키 - 선택된 컴포넌트 또는 그룹 이동
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        e.preventDefault();
+
+        if (selectedGroupId) {
+          // 그룹 이동
+          const selectedGroup = groups.find((g) => g.id === selectedGroupId);
+          if (selectedGroup && !selectedGroup.locked) {
+            const step = e.shiftKey ? 10 : 1;
+            let deltaX = 0;
+            let deltaY = 0;
+
+            switch (e.key) {
+              case "ArrowUp":
+                deltaY = -step;
+                break;
+              case "ArrowDown":
+                deltaY = step;
+                break;
+              case "ArrowLeft":
+                deltaX = -step;
+                break;
+              case "ArrowRight":
+                deltaX = step;
+                break;
+            }
+
+            const { moveGroup } = useProjectStore.getState();
+            moveGroup(selectedGroupId, deltaX, deltaY);
           }
+        } else if (selectedComponentId) {
+          // 개별 컴포넌트 이동
+          const selectedComponent = components.find(
+            (c) => c.id === selectedComponentId
+          );
+          if (
+            selectedComponent &&
+            !selectedComponent.locked &&
+            !selectedComponent.groupId
+          ) {
+            const step = e.shiftKey ? 10 : 1;
+            let newX = selectedComponent.x;
+            let newY = selectedComponent.y;
 
-          updateComponent(selectedComponentId, { x: newX, y: newY });
+            switch (e.key) {
+              case "ArrowUp":
+                newY -= step;
+                break;
+              case "ArrowDown":
+                newY += step;
+                break;
+              case "ArrowLeft":
+                newX -= step;
+                break;
+              case "ArrowRight":
+                newX += step;
+                break;
+            }
+
+            updateComponent(selectedComponentId, { x: newX, y: newY });
+          }
         }
         return;
       }
@@ -138,7 +213,7 @@ export const useKeyboardShortcuts = () => {
       // Escape 키 - 선택 해제
       if (e.key === "Escape") {
         e.preventDefault();
-        useProjectStore.getState().selectComponent(null);
+        useProjectStore.getState().clearSelection();
         return;
       }
     };
@@ -152,9 +227,15 @@ export const useKeyboardShortcuts = () => {
     };
   }, [
     selectedComponentId,
+    selectedComponentIds,
+    selectedGroupId,
     components,
+    groups,
     deleteComponent,
     updateComponent,
     addComponent,
+    createGroup,
+    ungroupComponents,
+    deleteGroup,
   ]);
 };

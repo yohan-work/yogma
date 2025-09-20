@@ -5,6 +5,7 @@ import type { DragEvent, MouseEvent } from "react";
 import { useProjectStore } from "@/stores/useProjectStore";
 import type { ComponentType } from "@/types";
 import { CanvasComponent } from "./CanvasComponent";
+import { GroupComponent } from "./GroupComponent";
 
 interface FrameCanvasProps {
   onDrop: (componentType: ComponentType, x: number, y: number) => void;
@@ -15,8 +16,13 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
   const frameRef = useRef<HTMLDivElement>(null);
   const {
     components,
-    selectedComponentId,
+    groups,
+    selectedComponentIds,
+    selectedGroupId,
     selectComponent,
+    selectMultipleComponents,
+    selectGroup,
+    clearSelection,
     isPreviewMode,
     zoomLevel,
     activeTool,
@@ -24,6 +30,9 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
   } = useProjectStore();
 
   const [frameSize] = useState({ width: 680, height: 680 });
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 });
+  const [selectionEnd, setSelectionEnd] = useState({ x: 0, y: 0 });
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
@@ -57,7 +66,7 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
     }
   };
 
-  const handleFrameClick = (e: MouseEvent) => {
+  const handleFrameMouseDown = (e: MouseEvent) => {
     console.log("🎯 프레임 클릭됨!", {
       target: e.target,
       currentTarget: e.currentTarget,
@@ -78,22 +87,80 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
       return;
     }
 
-    // 선택 도구일 때는 선택 해제만
-    if (activeTool === "select") {
-      console.log("👆 선택 도구 - 선택 해제만");
-      selectComponent(null);
-      return;
-    }
-
-    // 프레임 내에서의 상대적 위치 계산
     const frameRect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - frameRect.left;
     const y = e.clientY - frameRect.top;
 
-    console.log("🎨 도형 생성 시도:", { activeTool, x, y });
+    if (activeTool === "select") {
+      // 드래그 선택 시작
+      setIsSelecting(true);
+      setSelectionStart({ x, y });
+      setSelectionEnd({ x, y });
 
-    // 활성 도구에 따라 컴포넌트 생성
-    createComponentByTool(activeTool, x, y);
+      // Ctrl/Cmd 키가 눌려있지 않으면 기존 선택 해제
+      if (!e.ctrlKey && !e.metaKey) {
+        clearSelection();
+      }
+    } else {
+      // 도형 생성
+      console.log("🎨 도형 생성 시도:", { activeTool, x, y });
+      createComponentByTool(activeTool, x, y);
+    }
+  };
+
+  const handleFrameMouseMove = (e: MouseEvent) => {
+    if (!isSelecting) return;
+
+    const frameRect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - frameRect.left;
+    const y = e.clientY - frameRect.top;
+
+    setSelectionEnd({ x, y });
+  };
+
+  const handleFrameMouseUp = (e: MouseEvent) => {
+    if (!isSelecting) return;
+
+    setIsSelecting(false);
+
+    // 선택 영역 계산
+    const minX = Math.min(selectionStart.x, selectionEnd.x);
+    const minY = Math.min(selectionStart.y, selectionEnd.y);
+    const maxX = Math.max(selectionStart.x, selectionEnd.x);
+    const maxY = Math.max(selectionStart.y, selectionEnd.y);
+
+    // 선택 영역이 너무 작으면 무시
+    if (Math.abs(maxX - minX) < 5 && Math.abs(maxY - minY) < 5) {
+      return;
+    }
+
+    // 선택 영역에 포함된 컴포넌트들 찾기
+    const selectedComponents = components.filter((component) => {
+      const compRight = component.x + component.width;
+      const compBottom = component.y + component.height;
+
+      return (
+        component.x < maxX &&
+        compRight > minX &&
+        component.y < maxY &&
+        compBottom > minY
+      );
+    });
+
+    if (selectedComponents.length > 0) {
+      const newSelectedIds = selectedComponents.map((c) => c.id);
+
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl/Cmd + 드래그: 기존 선택에 추가
+        const combinedSelection = [
+          ...new Set([...selectedComponentIds, ...newSelectedIds]),
+        ];
+        selectMultipleComponents(combinedSelection);
+      } else {
+        // 일반 드래그: 새로운 선택
+        selectMultipleComponents(newSelectedIds);
+      }
+    }
   };
 
   const createComponentByTool = (tool: string, x: number, y: number) => {
@@ -213,23 +280,61 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
               }}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              onClick={handleFrameClick}
+              onMouseDown={handleFrameMouseDown}
+              onMouseMove={handleFrameMouseMove}
+              onMouseUp={handleFrameMouseUp}
             >
               {/* 프레임 라벨 */}
               <div className="absolute -top-8 left-0 bg-primary-900 text-neutral-0 text-xs px-2 py-1 rounded">
                 Frame
               </div>
 
+              {/* 그룹 렌더링 */}
+              {groups.map((group) => {
+                console.log("FrameCanvas 그룹 렌더링:", {
+                  group,
+                  isSelected: selectedGroupId === group.id,
+                });
+                return (
+                  <GroupComponent
+                    key={group.id}
+                    group={group}
+                    isSelected={selectedGroupId === group.id}
+                    isPreviewMode={isPreviewMode}
+                    onSelect={() => selectGroup(group.id)}
+                  />
+                );
+              })}
+
               {/* 컴포넌트들 */}
               {components.map((component) => (
                 <CanvasComponent
                   key={component.id}
                   component={component}
-                  isSelected={selectedComponentId === component.id}
+                  isSelected={selectedComponentIds.includes(component.id)}
                   isPreviewMode={isPreviewMode}
-                  onSelect={() => selectComponent(component.id)}
+                  onSelect={() => {
+                    if (selectedComponentIds.includes(component.id)) {
+                      // 이미 선택된 경우 - 다중 선택 모드에서는 해제하지 않음
+                      return;
+                    }
+                    selectComponent(component.id);
+                  }}
                 />
               ))}
+
+              {/* 드래그 선택 영역 표시 */}
+              {isSelecting && (
+                <div
+                  className="absolute border-2 border-primary-600 bg-primary-100 bg-opacity-20 pointer-events-none"
+                  style={{
+                    left: Math.min(selectionStart.x, selectionEnd.x),
+                    top: Math.min(selectionStart.y, selectionEnd.y),
+                    width: Math.abs(selectionEnd.x - selectionStart.x),
+                    height: Math.abs(selectionEnd.y - selectionStart.y),
+                  }}
+                />
+              )}
 
               {/* 빈 프레임 안내 */}
               {components.length === 0 && !isPreviewMode && (

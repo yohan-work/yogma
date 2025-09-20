@@ -7,6 +7,8 @@ export interface Template {
   category: "forms" | "dashboard" | "navigation" | "content";
   thumbnail?: string;
   components: Omit<ComponentInstance, "id">[];
+  shouldGroup?: boolean; // 템플릿 추가 시 자동으로 그룹화할지 여부
+  groupName?: string; // 그룹 이름
 }
 
 export const TEMPLATES: Template[] = [
@@ -15,6 +17,8 @@ export const TEMPLATES: Template[] = [
     name: "로그인 폼",
     description: "이메일과 비밀번호 입력이 있는 기본 로그인 폼",
     category: "forms",
+    shouldGroup: true,
+    groupName: "로그인 폼",
     components: [
       // 제목
       {
@@ -192,6 +196,8 @@ export const TEMPLATES: Template[] = [
     name: "회원가입 폼",
     description: "이름, 이메일, 비밀번호 입력이 있는 회원가입 폼",
     category: "forms",
+    shouldGroup: true,
+    groupName: "회원가입 폼",
     components: [
       // 제목
       {
@@ -401,6 +407,8 @@ export const TEMPLATES: Template[] = [
     name: "대시보드 카드",
     description: "통계 정보를 보여주는 대시보드 카드",
     category: "dashboard",
+    shouldGroup: true,
+    groupName: "대시보드 카드",
     components: [
       // 카드 배경
       {

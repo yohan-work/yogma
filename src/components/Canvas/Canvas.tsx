@@ -5,6 +5,7 @@ import type { DragEvent, MouseEvent } from "react";
 import { useProjectStore } from "@/stores/useProjectStore";
 import type { ComponentType } from "@/types";
 import { CanvasComponent } from "./CanvasComponent";
+import { GroupComponent } from "./GroupComponent";
 
 interface CanvasProps {
   onDrop: (componentType: ComponentType, x: number, y: number) => void;
@@ -12,8 +13,16 @@ interface CanvasProps {
 
 export const Canvas = ({ onDrop }: CanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const { components, selectedComponentId, selectComponent, isPreviewMode } =
-    useProjectStore();
+  const {
+    components,
+    groups,
+    selectedComponentId,
+    selectedGroupId,
+    selectComponent,
+    selectGroup,
+    clearSelection,
+    isPreviewMode,
+  } = useProjectStore();
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
@@ -41,7 +50,7 @@ export const Canvas = ({ onDrop }: CanvasProps) => {
   const handleCanvasClick = (e: MouseEvent) => {
     // 캔버스 자체를 클릭했을 때만 선택 해제
     if (e.target === e.currentTarget) {
-      selectComponent(null);
+      clearSelection();
     }
   };
 
@@ -86,6 +95,24 @@ export const Canvas = ({ onDrop }: CanvasProps) => {
         onDrop={handleDrop}
         onClick={handleCanvasClick}
       >
+        {/* 그룹 렌더링 */}
+        {groups.map((group) => {
+          console.log("그룹 렌더링:", {
+            group,
+            isSelected: selectedGroupId === group.id,
+          });
+          return (
+            <GroupComponent
+              key={group.id}
+              group={group}
+              isSelected={selectedGroupId === group.id}
+              isPreviewMode={isPreviewMode}
+              onSelect={() => selectGroup(group.id)}
+            />
+          );
+        })}
+
+        {/* 컴포넌트 렌더링 */}
         {components.map((component) => (
           <CanvasComponent
             key={component.id}

@@ -29,13 +29,20 @@ export const CanvasComponent = ({
   const handleClick = (e: MouseEvent) => {
     e.stopPropagation();
     if (!isPreviewMode && !component.locked) {
-      onSelect();
+      // 그룹에 속한 컴포넌트는 개별 선택하지 않고 그룹을 선택
+      if (component.groupId) {
+        const { selectGroup } = useProjectStore.getState();
+        selectGroup(component.groupId);
+      } else {
+        onSelect();
+      }
     }
   };
 
   const handleDoubleClick = (e: MouseEvent) => {
     e.stopPropagation();
     if (!isPreviewMode && !component.locked && component.type === "text") {
+      // 그룹에 속한 컴포넌트도 텍스트 편집 허용
       startTextEditing();
     }
   };
@@ -83,7 +90,8 @@ export const CanvasComponent = ({
   };
 
   const handleMouseDown = (e: MouseEvent) => {
-    if (isPreviewMode || !isSelected || component.locked) return;
+    if (isPreviewMode || !isSelected || component.locked || component.groupId)
+      return;
 
     e.stopPropagation();
     setIsDragging(true);
@@ -335,6 +343,7 @@ export const CanvasComponent = ({
   return (
     <div
       ref={componentRef}
+      data-component-id={component.id}
       className={`absolute ${
         component.locked
           ? "cursor-not-allowed"
@@ -351,6 +360,8 @@ export const CanvasComponent = ({
         top: component.y,
         width: component.width,
         height: component.height,
+        pointerEvents: component.groupId && !isEditingText ? "none" : "auto",
+        zIndex: isEditingText ? 20 : component.groupId ? 1 : 5,
       }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}

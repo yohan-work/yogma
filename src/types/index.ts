@@ -69,6 +69,19 @@ export interface ComponentInstance {
   currentState: string;
   visible: boolean;
   locked: boolean;
+  groupId?: string; // 그룹 ID (선택적)
+}
+
+export interface ComponentGroup {
+  id: string;
+  name: string;
+  componentIds: string[];
+  x: number; // 그룹의 기준점
+  y: number;
+  width: number; // 그룹의 전체 크기
+  height: number;
+  locked: boolean;
+  visible: boolean;
 }
 
 // 컴포넌트 상태 정의
@@ -114,7 +127,10 @@ export type ToolType =
 // 프로젝트 전체 상태
 export interface ProjectState {
   components: ComponentInstance[];
+  groups: ComponentGroup[];
   selectedComponentId: string | null;
+  selectedComponentIds: string[]; // 다중 선택
+  selectedGroupId: string | null;
   flowNodes: FlowNode[];
   mockData: MockData;
   isPreviewMode: boolean;

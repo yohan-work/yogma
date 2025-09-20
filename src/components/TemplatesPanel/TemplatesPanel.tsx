@@ -18,7 +18,8 @@ interface TemplatesPanelProps {
 export const TemplatesPanel = ({ onTemplateSelect }: TemplatesPanelProps) => {
   const [selectedCategory, setSelectedCategory] =
     useState<Template["category"]>("forms");
-  const { addComponent, selectComponent } = useProjectStore();
+  const { addComponent, addComponentsAsGroup, selectComponent } =
+    useProjectStore();
 
   const categories = [
     { id: "forms" as const, name: "폼", icon: FileText },
@@ -30,13 +31,21 @@ export const TemplatesPanel = ({ onTemplateSelect }: TemplatesPanelProps) => {
   const handleTemplateClick = (template: Template) => {
     console.log("템플릿 선택됨:", template.name);
 
-    // 기존 컴포넌트 선택 해제
+    // 기존 선택 해제
     selectComponent(null);
 
-    // 템플릿의 모든 컴포넌트를 캔버스에 추가
-    template.components.forEach((componentData) => {
-      addComponent(componentData);
-    });
+    if (template.shouldGroup && template.components.length > 1) {
+      // 그룹으로 추가하는 경우 - 한 번에 처리
+      addComponentsAsGroup(
+        template.components,
+        template.groupName || template.name
+      );
+    } else {
+      // 개별 컴포넌트로 추가
+      template.components.forEach((componentData) => {
+        addComponent(componentData);
+      });
+    }
 
     // 콜백 호출 (필요한 경우)
     if (onTemplateSelect) {
