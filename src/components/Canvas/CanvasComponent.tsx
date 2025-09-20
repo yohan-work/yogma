@@ -196,7 +196,9 @@ export const CanvasComponent = ({
           ? "cursor-grabbing"
           : "cursor-pointer"
       } ${
-        isSelected && !isPreviewMode ? "ring-2 ring-blue-500 ring-offset-2" : ""
+        isSelected && !isPreviewMode
+          ? "ring-2 ring-primary-900 ring-offset-2"
+          : ""
       } ${component.locked ? "opacity-70" : ""}`}
       style={{
         left: component.x,
@@ -214,12 +216,12 @@ export const CanvasComponent = ({
         <>
           {/* 리사이즈 핸들 */}
           <div
-            className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize hover:bg-blue-600 transition-colors"
+            className="absolute -bottom-1 -right-1 w-3 h-3 bg-primary-900 border border-neutral-0 rounded-sm cursor-se-resize hover:bg-primary-800 transition-colors"
             onMouseDown={handleResizeMouseDown}
           />
 
           {/* 컴포넌트 라벨 */}
-          <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+          <div className="absolute -top-6 left-0 bg-primary-900 text-neutral-0 text-xs px-2 py-1 rounded">
             {component.type}
           </div>
         </>

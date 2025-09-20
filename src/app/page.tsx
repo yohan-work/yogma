@@ -118,7 +118,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-neutral-50">
       {/* 상단 툴바 */}
       <Toolbar />
 

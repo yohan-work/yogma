@@ -34,15 +34,15 @@ export const PagesPanel = () => {
   };
 
   return (
-    <div className="w-full bg-white">
-      <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-800">Pages</h3>
+    <div className="w-full bg-neutral-0">
+      <div className="p-3 border-b border-neutral-100 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-neutral-800">Pages</h3>
         <button
           onClick={addPage}
-          className="p-1 hover:bg-gray-100 rounded transition-colors"
+          className="p-1 hover:bg-neutral-100 rounded transition-colors"
           title="새 페이지 추가"
         >
-          <Plus size={14} className="text-gray-600" />
+          <Plus size={14} className="text-neutral-600" />
         </button>
       </div>
 
@@ -52,7 +52,7 @@ export const PagesPanel = () => {
             key={page.id}
             className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors group ${
               page.isActive
-                ? "bg-blue-500 text-white"
+                ? "bg-primary-900 text-neutral-0"
                 : "hover:bg-gray-50 text-gray-700"
             }`}
             onClick={() => selectPage(page.id)}
@@ -62,7 +62,7 @@ export const PagesPanel = () => {
               className={`w-4 h-4 rounded-sm border-2 ${
                 page.isActive
                   ? "border-white bg-white/20"
-                  : "border-gray-300 bg-gray-100"
+                  : "border-neutral-300 bg-neutral-100"
               }`}
             ></div>
 

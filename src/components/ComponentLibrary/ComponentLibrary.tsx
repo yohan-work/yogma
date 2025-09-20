@@ -43,20 +43,15 @@ interface ComponentLibraryProps {
   onDragStart: (componentType: ComponentType) => void;
 }
 
-export const ComponentLibrary = ({
-  onDragStart,
-}: ComponentLibraryProps) => {
-  const handleDragStart = (
-    e: DragEvent,
-    componentType: ComponentType
-  ) => {
+export const ComponentLibrary = ({ onDragStart }: ComponentLibraryProps) => {
+  const handleDragStart = (e: DragEvent, componentType: ComponentType) => {
     e.dataTransfer.setData("application/json", JSON.stringify(componentType));
     onDragStart(componentType);
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 p-4">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">컴포넌트</h2>
+    <div className="w-64 bg-neutral-0 border-r border-neutral-200 p-4">
+      <h2 className="text-lg font-semibold text-neutral-800 mb-4">컴포넌트</h2>
 
       <div className="space-y-2">
         {COMPONENT_TYPES.map((componentType) => {
@@ -67,10 +62,10 @@ export const ComponentLibrary = ({
               key={componentType.id}
               draggable
               onDragStart={(e) => handleDragStart(e, componentType)}
-              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-grab hover:bg-gray-100 transition-colors border border-gray-200"
+              className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg cursor-grab hover:bg-neutral-100 transition-colors border border-neutral-200"
             >
-              <IconComponent size={20} className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
+              <IconComponent size={20} className="text-neutral-600" />
+              <span className="text-sm font-medium text-neutral-700">
                 {componentType.name}
               </span>
             </div>

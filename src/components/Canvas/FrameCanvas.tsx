@@ -77,7 +77,7 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
             {/* 프레임 */}
             <div
               ref={frameRef}
-              className="relative bg-white border-2 border-blue-500 rounded-lg shadow-lg"
+              className="relative bg-neutral-0 border-2 border-primary-900 rounded-lg shadow-lg"
               style={{
                 width: frameSize.width,
                 height: frameSize.height,
@@ -87,7 +87,7 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
               onClick={handleFrameClick}
             >
               {/* 프레임 라벨 */}
-              <div className="absolute -top-8 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+              <div className="absolute -top-8 left-0 bg-primary-900 text-neutral-0 text-xs px-2 py-1 rounded">
                 Frame
               </div>
 

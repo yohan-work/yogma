@@ -14,15 +14,15 @@ export const Sidebar = ({ onDragStart }: SidebarProps) => {
   const [activeTab, setActiveTab] = useState<"pages" | "components">("pages");
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-64 bg-neutral-0 border-r border-neutral-200 flex flex-col">
       {/* 탭 헤더 */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-neutral-200">
         <button
           onClick={() => setActiveTab("pages")}
           className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === "pages"
-              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-              : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+              ? "text-primary-900 border-b-2 border-primary-900 bg-neutral-50"
+              : "text-neutral-600 hover:text-neutral-800 hover:bg-neutral-50"
           }`}
         >
           Pages
@@ -31,8 +31,8 @@ export const Sidebar = ({ onDragStart }: SidebarProps) => {
           onClick={() => setActiveTab("components")}
           className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
             activeTab === "components"
-              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-              : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+              ? "text-primary-900 border-b-2 border-primary-900 bg-neutral-50"
+              : "text-neutral-600 hover:text-neutral-800 hover:bg-neutral-50"
           }`}
         >
           Component
