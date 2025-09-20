@@ -93,8 +93,6 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   },
 
   addComponentsAsGroup: (components, groupName) => {
-    console.log("addComponentsAsGroup 호출됨:", { components, groupName });
-
     const groupId = `group-${Date.now()}-${Math.random()
       .toString(36)
       .substr(2, 9)}`;
@@ -105,8 +103,6 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       id: `component-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       groupId,
     }));
-
-    console.log("생성된 컴포넌트들:", newComponents);
 
     // 그룹 경계 계산
     const minX = Math.min(...newComponents.map((c) => c.x));
@@ -126,8 +122,6 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       visible: true,
     };
 
-    console.log("생성된 그룹:", newGroup);
-
     set((state) => ({
       components: [...state.components, ...newComponents],
       groups: [...state.groups, newGroup],
@@ -136,7 +130,6 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       selectedComponentId: null,
     }));
 
-    console.log("그룹 생성 완료, groupId:", groupId);
     return groupId;
   },
 
@@ -319,16 +312,9 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   },
 
   moveGroup: (groupId, deltaX, deltaY) => {
-    console.log("moveGroup 호출됨:", { groupId, deltaX, deltaY });
-
     set((state) => {
       const group = state.groups.find((g) => g.id === groupId);
-      if (!group) {
-        console.log("그룹을 찾을 수 없음:", groupId);
-        return state;
-      }
-
-      console.log("그룹 찾음:", group);
+      if (!group) return state;
 
       // 그룹 위치 업데이트
       const updatedGroup = {
@@ -343,13 +329,6 @@ export const useProjectStore = create<ProjectStore>((set) => ({
           ? { ...component, x: component.x + deltaX, y: component.y + deltaY }
           : component
       );
-
-      console.log("그룹 이동 완료:", {
-        updatedGroup,
-        affectedComponents: updatedComponents.filter((c) =>
-          group.componentIds.includes(c.id)
-        ),
-      });
 
       return {
         ...state,

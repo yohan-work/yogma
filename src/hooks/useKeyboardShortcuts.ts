@@ -24,10 +24,16 @@ export const useKeyboardShortcuts = () => {
         activeElement &&
         (activeElement.tagName === "INPUT" ||
           activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "SELECT" ||
           (activeElement as HTMLElement).contentEditable === "true");
 
-      if (isInputFocused) {
-        return; // 입력 필드에 포커스가 있으면 단축키 실행하지 않음
+      // PropertyPanel 영역 내부에서는 단축키 완전히 비활성화
+      const isInPropertyPanel = activeElement?.closest(
+        ".property-panel-container"
+      );
+
+      if (isInputFocused || isInPropertyPanel) {
+        return; // 입력 필드에 포커스가 있거나 PropertyPanel 내부에서는 단축키 실행하지 않음
       }
 
       // Ctrl/Cmd 키 조합

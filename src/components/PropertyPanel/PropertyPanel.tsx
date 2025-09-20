@@ -1,6 +1,7 @@
 "use client";
 
 import { useProjectStore } from "@/stores/useProjectStore";
+import { useCallback, useEffect } from "react";
 
 export const PropertyPanel = () => {
   const { components, selectedComponentId, updateComponent } =
@@ -10,6 +11,115 @@ export const PropertyPanel = () => {
     (c) => c.id === selectedComponentId
   );
 
+  // PropertyPanel 전체에서 키보드 이벤트를 완전히 차단하는 핸들러
+  const handlePanelKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // 모든 키보드 이벤트를 완전히 차단
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+
+    // 기본 동작은 허용 (input 필드의 정상 동작을 위해)
+    // preventDefault는 호출하지 않음
+  }, []);
+
+  // PropertyPanel 전체에서 포커스 이벤트를 차단하는 핸들러
+  const handlePanelFocus = useCallback((e: React.FocusEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handlePanelBlur = useCallback((e: React.FocusEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  // PropertyPanel에서 직접 키보드 이벤트를 차단하는 useEffect
+  useEffect(() => {
+    const panelElement = document.querySelector(".property-panel-container");
+
+    if (panelElement) {
+      const handleKeyDown = (e: Event) => {
+        const keyboardEvent = e as KeyboardEvent;
+        // PropertyPanel 내부에서 발생하는 모든 키보드 이벤트를 차단
+        keyboardEvent.stopPropagation();
+        keyboardEvent.stopImmediatePropagation();
+
+        // 기본 동작은 허용 (input 필드의 정상 동작을 위해)
+        // preventDefault는 호출하지 않음
+      };
+
+      // 캡처 단계에서 이벤트를 차단 (더 높은 우선순위)
+      panelElement.addEventListener("keydown", handleKeyDown, true);
+
+      return () => {
+        panelElement.removeEventListener("keydown", handleKeyDown, true);
+      };
+    }
+  }, []);
+
+  const updateProperty = useCallback(
+    (key: string, value: string | number | boolean) => {
+      if (selectedComponent) {
+        updateComponent(selectedComponent.id, {
+          properties: {
+            ...selectedComponent.properties,
+            [key]: value,
+          },
+        });
+      }
+    },
+    [selectedComponent, updateComponent]
+  );
+
+  // 입력 필드에서 키보드 이벤트 전파 방지 (강력한 포커스 유지)
+  const handleInputKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // 모든 키 이벤트의 전파를 완전히 차단
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
+
+    // 특정 키에만 기본 동작 방지 (Enter, Escape 등)
+    if (e.key === "Enter") {
+      e.preventDefault();
+      // Enter 키 시 blur 처리로 편집 완료
+      (e.target as HTMLInputElement | HTMLSelectElement).blur();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      // Escape 키 시 blur 처리로 편집 취소
+      (e.target as HTMLInputElement | HTMLSelectElement).blur();
+    }
+    // 다른 키들(Backspace, Delete 등)은 기본 동작 허용
+  }, []);
+
+  // 포커스 이벤트 핸들러
+  const handleInputFocus = useCallback((e: React.FocusEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleInputBlur = useCallback((e: React.FocusEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  // 위치 및 크기 업데이트 함수들을 메모이제이션
+  const handleXChange = useCallback(
+    (value: string) => {
+      if (selectedComponent) {
+        updateComponent(selectedComponent.id, {
+          x: parseInt(value) || 0,
+        });
+      }
+    },
+    [selectedComponent, updateComponent]
+  );
+
+  const handleYChange = useCallback(
+    (value: string) => {
+      if (selectedComponent) {
+        updateComponent(selectedComponent.id, {
+          y: parseInt(value) || 0,
+        });
+      }
+    },
+    [selectedComponent, updateComponent]
+  );
+
+  // 선택된 컴포넌트가 없으면 빈 패널 표시
   if (!selectedComponent) {
     return (
       <div className="w-80 bg-white border-l border-gray-200 p-4">
@@ -21,15 +131,6 @@ export const PropertyPanel = () => {
       </div>
     );
   }
-
-  const updateProperty = (key: string, value: string | number | boolean) => {
-    updateComponent(selectedComponent.id, {
-      properties: {
-        ...selectedComponent.properties,
-        [key]: value,
-      },
-    });
-  };
 
   // 타입 안전한 속성 접근을 위한 헬퍼 함수
   const properties = selectedComponent.properties;
@@ -49,6 +150,9 @@ export const PropertyPanel = () => {
                 type="text"
                 value={(properties.text as string) || ""}
                 onChange={(e) => updateProperty("text", e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="텍스트를 입력하세요"
               />
@@ -61,6 +165,19 @@ export const PropertyPanel = () => {
               <select
                 value={(properties.fontSize as string) || "14px"}
                 onChange={(e) => updateProperty("fontSize", e.target.value)}
+                onKeyDown={(e) => {
+                  // 모든 키 이벤트의 전파를 완전히 차단
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+
+                  // 특정 키에만 기본 동작 방지
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    (e.target as HTMLSelectElement).blur();
+                  }
+                }}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="12px">12px</option>
@@ -81,6 +198,9 @@ export const PropertyPanel = () => {
                 type="color"
                 value={(properties.color as string) || "#374151"}
                 onChange={(e) => updateProperty("color", e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
               />
             </div>
@@ -98,6 +218,9 @@ export const PropertyPanel = () => {
                 type="text"
                 value={(properties.text as string) || ""}
                 onChange={(e) => updateProperty("text", e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="버튼 텍스트"
               />
@@ -110,6 +233,19 @@ export const PropertyPanel = () => {
               <select
                 value={(properties.variant as string) || "primary"}
                 onChange={(e) => updateProperty("variant", e.target.value)}
+                onKeyDown={(e) => {
+                  // 모든 키 이벤트의 전파를 완전히 차단
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+
+                  // 특정 키에만 기본 동작 방지
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    (e.target as HTMLSelectElement).blur();
+                  }
+                }}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="primary">Primary</option>
@@ -127,6 +263,9 @@ export const PropertyPanel = () => {
                 onChange={(e) =>
                   updateProperty("backgroundColor", e.target.value)
                 }
+                onKeyDown={handleInputKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
               />
             </div>
@@ -144,6 +283,9 @@ export const PropertyPanel = () => {
                 type="text"
                 value={(properties.placeholder as string) || ""}
                 onChange={(e) => updateProperty("placeholder", e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="플레이스홀더 텍스트"
               />
@@ -156,6 +298,19 @@ export const PropertyPanel = () => {
               <select
                 value={(properties.inputType as string) || "text"}
                 onChange={(e) => updateProperty("inputType", e.target.value)}
+                onKeyDown={(e) => {
+                  // 모든 키 이벤트의 전파를 완전히 차단
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+
+                  // 특정 키에만 기본 동작 방지
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    (e.target as HTMLSelectElement).blur();
+                  }
+                }}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="text">텍스트</option>
@@ -173,6 +328,9 @@ export const PropertyPanel = () => {
                 type="text"
                 value={(properties.width as string) || "200px"}
                 onChange={(e) => updateProperty("width", e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="예: 200px, 100%"
               />
@@ -191,6 +349,9 @@ export const PropertyPanel = () => {
                 type="text"
                 value={(properties.src as string) || ""}
                 onChange={(e) => updateProperty("src", e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="https://example.com/image.jpg"
               />
@@ -204,6 +365,9 @@ export const PropertyPanel = () => {
                 type="text"
                 value={(properties.alt as string) || ""}
                 onChange={(e) => updateProperty("alt", e.target.value)}
+                onKeyDown={handleInputKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="이미지 설명"
               />
@@ -218,6 +382,9 @@ export const PropertyPanel = () => {
                   type="text"
                   value={(properties.width as string) || "150px"}
                   onChange={(e) => updateProperty("width", e.target.value)}
+                  onKeyDown={handleInputKeyDown}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="150px"
                 />
@@ -230,6 +397,9 @@ export const PropertyPanel = () => {
                   type="text"
                   value={(properties.height as string) || "100px"}
                   onChange={(e) => updateProperty("height", e.target.value)}
+                  onKeyDown={handleInputKeyDown}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="100px"
                 />
@@ -244,7 +414,12 @@ export const PropertyPanel = () => {
   };
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 p-4">
+    <div
+      className="w-80 bg-white border-l border-gray-200 p-4 property-panel-container"
+      onKeyDown={handlePanelKeyDown}
+      onFocus={handlePanelFocus}
+      onBlur={handlePanelBlur}
+    >
       <h2 className="text-lg font-semibold text-gray-800 mb-4">속성</h2>
 
       <div className="mb-6">
@@ -268,11 +443,10 @@ export const PropertyPanel = () => {
             <input
               type="number"
               value={Math.round(selectedComponent.x)}
-              onChange={(e) =>
-                updateComponent(selectedComponent.id, {
-                  x: parseInt(e.target.value) || 0,
-                })
-              }
+              onChange={(e) => handleXChange(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
               className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
@@ -281,11 +455,10 @@ export const PropertyPanel = () => {
             <input
               type="number"
               value={Math.round(selectedComponent.y)}
-              onChange={(e) =>
-                updateComponent(selectedComponent.id, {
-                  y: parseInt(e.target.value) || 0,
-                })
-              }
+              onChange={(e) => handleYChange(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
               className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>

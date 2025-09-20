@@ -67,30 +67,16 @@ export const GroupComponent = ({
   };
 
   const handleMouseDown = (e: MouseEvent) => {
-    console.log("GroupComponent handleMouseDown:", {
-      groupId: group.id,
-      isSelected,
-      isPreviewMode,
-      locked: group.locked,
-    });
-
     if (isPreviewMode || group.locked) return;
 
     e.stopPropagation();
 
     // 그룹이 선택되지 않았다면 먼저 선택
     if (!isSelected) {
-      console.log("그룹 선택 중...");
       onSelect();
     }
 
     // 선택 상태와 관계없이 드래그 시작
-    console.log("드래그 시작:", {
-      x: e.clientX,
-      y: e.clientY,
-      groupX: group.x,
-      groupY: group.y,
-    });
     setIsDragging(true);
     setDragStart({
       x: e.clientX - group.x,
@@ -106,13 +92,6 @@ export const GroupComponent = ({
         const newY = e.clientY - dragStart.y;
         const deltaX = newX - group.x;
         const deltaY = newY - group.y;
-        console.log("그룹 이동 중:", {
-          newX,
-          newY,
-          deltaX,
-          deltaY,
-          groupId: group.id,
-        });
         moveGroup(group.id, deltaX, deltaY);
       }
     };

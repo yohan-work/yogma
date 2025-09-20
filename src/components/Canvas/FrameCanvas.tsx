@@ -290,21 +290,15 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
               </div>
 
               {/* 그룹 렌더링 */}
-              {groups.map((group) => {
-                console.log("FrameCanvas 그룹 렌더링:", {
-                  group,
-                  isSelected: selectedGroupId === group.id,
-                });
-                return (
-                  <GroupComponent
-                    key={group.id}
-                    group={group}
-                    isSelected={selectedGroupId === group.id}
-                    isPreviewMode={isPreviewMode}
-                    onSelect={() => selectGroup(group.id)}
-                  />
-                );
-              })}
+              {groups.map((group) => (
+                <GroupComponent
+                  key={group.id}
+                  group={group}
+                  isSelected={selectedGroupId === group.id}
+                  isPreviewMode={isPreviewMode}
+                  onSelect={() => selectGroup(group.id)}
+                />
+              ))}
 
               {/* 컴포넌트들 */}
               {components.map((component) => (

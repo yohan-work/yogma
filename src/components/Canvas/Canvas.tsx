@@ -96,21 +96,15 @@ export const Canvas = ({ onDrop }: CanvasProps) => {
         onClick={handleCanvasClick}
       >
         {/* 그룹 렌더링 */}
-        {groups.map((group) => {
-          console.log("그룹 렌더링:", {
-            group,
-            isSelected: selectedGroupId === group.id,
-          });
-          return (
-            <GroupComponent
-              key={group.id}
-              group={group}
-              isSelected={selectedGroupId === group.id}
-              isPreviewMode={isPreviewMode}
-              onSelect={() => selectGroup(group.id)}
-            />
-          );
-        })}
+        {groups.map((group) => (
+          <GroupComponent
+            key={group.id}
+            group={group}
+            isSelected={selectedGroupId === group.id}
+            isPreviewMode={isPreviewMode}
+            onSelect={() => selectGroup(group.id)}
+          />
+        ))}
 
         {/* 컴포넌트 렌더링 */}
         {components.map((component) => (
