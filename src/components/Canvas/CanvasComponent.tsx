@@ -172,10 +172,82 @@ export const CanvasComponent = ({
           </div>
         );
 
+      case "rectangle":
+      case "frame":
+        return (
+          <div
+            className="w-full h-full"
+            style={{
+              backgroundColor: getProp("backgroundColor", "#f3f4f6") as string,
+              border: `${getProp("borderWidth", 1)}px solid ${getProp(
+                "borderColor",
+                "#d1d5db"
+              )}`,
+              borderRadius: `${getProp("borderRadius", 4)}px`,
+            }}
+          />
+        );
+
+      case "circle":
+        return (
+          <div
+            className="w-full h-full"
+            style={{
+              backgroundColor: getProp("backgroundColor", "#f3f4f6") as string,
+              border: `${getProp("borderWidth", 1)}px solid ${getProp(
+                "borderColor",
+                "#d1d5db"
+              )}`,
+              borderRadius: "50%",
+            }}
+          />
+        );
+
+      case "triangle":
+        return (
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{
+              backgroundColor: "transparent",
+            }}
+          >
+            <div
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: `${component.width / 2}px solid transparent`,
+                borderRight: `${component.width / 2}px solid transparent`,
+                borderBottom: `${component.height}px solid ${getProp(
+                  "backgroundColor",
+                  "#f3f4f6"
+                )}`,
+              }}
+            />
+          </div>
+        );
+
+      case "line":
+        return (
+          <div
+            className="w-full h-full flex items-center"
+            style={{
+              backgroundColor: "transparent",
+            }}
+          >
+            <div
+              className="w-full"
+              style={{
+                height: `${getProp("strokeWidth", 2)}px`,
+                backgroundColor: getProp("strokeColor", "#374151") as string,
+              }}
+            />
+          </div>
+        );
+
       default:
         return (
           <div className="p-2 bg-gray-100 text-gray-600">
-            알 수 없는 컴포넌트
+            알 수 없는 컴포넌트: {type}
           </div>
         );
     }

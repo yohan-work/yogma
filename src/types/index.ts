@@ -1,7 +1,16 @@
 // 컴포넌트 타입 정의
 export interface ComponentType {
   id: string;
-  type: "input" | "button" | "text" | "image";
+  type:
+    | "input"
+    | "button"
+    | "text"
+    | "image"
+    | "rectangle"
+    | "circle"
+    | "triangle"
+    | "line"
+    | "frame";
   name: string;
   icon: string;
 }
@@ -90,7 +99,17 @@ export interface MockData {
 }
 
 // 도구 타입 정의
-export type ToolType = 'select' | 'frame' | 'rectangle' | 'circle' | 'triangle' | 'line' | 'pen' | 'text' | 'image' | 'hand';
+export type ToolType =
+  | "select"
+  | "frame"
+  | "rectangle"
+  | "circle"
+  | "triangle"
+  | "line"
+  | "pen"
+  | "text"
+  | "image"
+  | "hand";
 
 // 프로젝트 전체 상태
 export interface ProjectState {
