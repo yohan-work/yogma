@@ -21,13 +21,65 @@ export const CanvasComponent = ({
   const [isResizing, setIsResizing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [editText, setEditText] = useState("");
   const componentRef = useRef<HTMLDivElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null);
 
   const handleClick = (e: MouseEvent) => {
     e.stopPropagation();
     if (!isPreviewMode && !component.locked) {
       onSelect();
     }
+  };
+
+  const handleDoubleClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (!isPreviewMode && !component.locked && component.type === "text") {
+      startTextEditing();
+    }
+  };
+
+  const startTextEditing = () => {
+    const currentText = (component.properties.text as string) || "텍스트";
+    setEditText(currentText);
+    setIsEditingText(true);
+
+    // 다음 프레임에서 포커스 설정
+    setTimeout(() => {
+      if (textInputRef.current) {
+        textInputRef.current.focus();
+        textInputRef.current.select();
+      }
+    }, 0);
+  };
+
+  const finishTextEditing = () => {
+    if (editText.trim() !== "") {
+      updateComponent(component.id, {
+        properties: {
+          ...component.properties,
+          text: editText.trim(),
+        },
+      });
+    }
+    setIsEditingText(false);
+    setEditText("");
+  };
+
+  const handleTextKeyDown = (e: React.KeyboardEvent) => {
+    // 텍스트 편집 중에는 모든 키 이벤트의 전파를 막음
+    e.stopPropagation();
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      finishTextEditing();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setIsEditingText(false);
+      setEditText("");
+    }
+    // 다른 키들(Backspace, Delete 등)은 기본 동작 허용
   };
 
   const handleMouseDown = (e: MouseEvent) => {
@@ -103,14 +155,36 @@ export const CanvasComponent = ({
       case "text":
         return (
           <div
-            className="p-2 text-gray-800"
+            className="p-2 text-gray-800 w-full h-full flex items-center"
             style={{
               fontSize: getProp("fontSize", "14px") as string,
               color: getProp("color", "#374151") as string,
               fontWeight: getProp("fontWeight", "normal") as string,
             }}
           >
-            {getProp("text", "텍스트") as string}
+            {isEditingText ? (
+              <input
+                ref={textInputRef}
+                type="text"
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onBlur={finishTextEditing}
+                onKeyDown={handleTextKeyDown}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full h-full bg-transparent border-none outline-none resize-none"
+                style={{
+                  fontSize: getProp("fontSize", "14px") as string,
+                  color: getProp("color", "#374151") as string,
+                  fontWeight: getProp("fontWeight", "normal") as string,
+                  fontFamily: "inherit",
+                }}
+              />
+            ) : (
+              <span className="w-full">
+                {getProp("text", "텍스트") as string}
+              </span>
+            )}
           </div>
         );
 
@@ -279,6 +353,7 @@ export const CanvasComponent = ({
         height: component.height,
       }}
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       onMouseDown={handleMouseDown}
     >
       {renderComponent()}

@@ -58,41 +58,42 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
   };
 
   const handleFrameClick = (e: MouseEvent) => {
-    console.log("프레임 클릭됨!", {
+    console.log("🎯 프레임 클릭됨!", {
       target: e.target,
       currentTarget: e.currentTarget,
       activeTool,
       isPreviewMode,
+      targetTagName: (e.target as Element)?.tagName,
+      currentTargetTagName: (e.currentTarget as Element)?.tagName,
     });
 
+    // 이벤트 전파 중지
+    e.preventDefault();
     e.stopPropagation();
-    if (e.target === e.currentTarget) {
-      console.log("프레임 직접 클릭 확인됨");
 
-      // 프리뷰 모드에서는 도구 기능 비활성화
-      if (isPreviewMode) {
-        console.log("프리뷰 모드 - 선택 해제만");
-        selectComponent(null);
-        return;
-      }
-
-      // 선택 도구일 때는 선택 해제만
-      if (activeTool === "select") {
-        console.log("선택 도구 - 선택 해제만");
-        selectComponent(null);
-        return;
-      }
-
-      // 프레임 내에서의 상대적 위치 계산
-      const frameRect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - frameRect.left;
-      const y = e.clientY - frameRect.top;
-
-      console.log("도형 생성 시도:", { activeTool, x, y });
-
-      // 활성 도구에 따라 컴포넌트 생성
-      createComponentByTool(activeTool, x, y);
+    // 프리뷰 모드에서는 도구 기능 비활성화
+    if (isPreviewMode) {
+      console.log("⚠️ 프리뷰 모드 - 선택 해제만");
+      selectComponent(null);
+      return;
     }
+
+    // 선택 도구일 때는 선택 해제만
+    if (activeTool === "select") {
+      console.log("👆 선택 도구 - 선택 해제만");
+      selectComponent(null);
+      return;
+    }
+
+    // 프레임 내에서의 상대적 위치 계산
+    const frameRect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - frameRect.left;
+    const y = e.clientY - frameRect.top;
+
+    console.log("🎨 도형 생성 시도:", { activeTool, x, y });
+
+    // 활성 도구에 따라 컴포넌트 생성
+    createComponentByTool(activeTool, x, y);
   };
 
   const createComponentByTool = (tool: string, x: number, y: number) => {
@@ -202,10 +203,13 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
             {/* 프레임 */}
             <div
               ref={frameRef}
-              className="relative bg-neutral-0 border-2 border-primary-900 rounded-lg shadow-lg"
+              className={`relative bg-neutral-0 border-2 border-primary-900 rounded-lg shadow-lg ${
+                activeTool === "select" ? "cursor-default" : "cursor-crosshair"
+              }`}
               style={{
                 width: frameSize.width,
                 height: frameSize.height,
+                minHeight: frameSize.height, // 최소 높이 보장
               }}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
