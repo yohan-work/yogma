@@ -1,8 +1,9 @@
 "use client";
 
-import { ComponentLibrary } from "@/components/ComponentLibrary/ComponentLibrary";
-import { Canvas } from "@/components/Canvas/Canvas";
-import { PropertyPanel } from "@/components/PropertyPanel/PropertyPanel";
+import { Toolbar } from "@/components/Toolbar/Toolbar";
+import { Sidebar } from "@/components/Sidebar/Sidebar";
+import { FrameCanvas } from "@/components/Canvas/FrameCanvas";
+import { EnhancedPropertyPanel } from "@/components/PropertyPanel/EnhancedPropertyPanel";
 import { useProjectStore } from "@/stores/useProjectStore";
 import type { ComponentType } from "@/types";
 
@@ -111,15 +112,21 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* 왼쪽 컴포넌트 라이브러리 */}
-      <ComponentLibrary onDragStart={handleDragStart} />
+    <div className="flex flex-col h-screen bg-gray-50">
+      {/* 상단 툴바 */}
+      <Toolbar />
 
-      {/* 중앙 캔버스 */}
-      <Canvas onDrop={handleDrop} />
+      {/* 메인 콘텐츠 영역 */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* 왼쪽 사이드바 */}
+        <Sidebar onDragStart={handleDragStart} />
 
-      {/* 오른쪽 속성 패널 */}
-      <PropertyPanel />
+        {/* 중앙 캔버스 */}
+        <FrameCanvas onDrop={handleDrop} />
+
+        {/* 오른쪽 속성 패널 */}
+        <EnhancedPropertyPanel />
+      </div>
     </div>
   );
 }
