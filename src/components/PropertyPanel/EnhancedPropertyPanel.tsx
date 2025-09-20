@@ -1,7 +1,7 @@
 "use client";
 
 import { useProjectStore } from "@/stores/useProjectStore";
-import { ChevronDown, Link, Unlink, Eye, EyeOff } from "lucide-react";
+import { ChevronDown, Link, Eye } from "lucide-react";
 import { useState } from "react";
 
 export const EnhancedPropertyPanel = () => {

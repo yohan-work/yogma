@@ -17,22 +17,47 @@ import {
   Menu,
 } from "lucide-react";
 import { useProjectStore } from "@/stores/useProjectStore";
+import type { ToolType } from "@/types";
 
 export const Toolbar = () => {
-  const { isPreviewMode, togglePreviewMode } = useProjectStore();
+  const {
+    isPreviewMode,
+    togglePreviewMode,
+    activeTool,
+    setActiveTool,
+    zoomLevel,
+    zoomIn,
+    zoomOut,
+    setZoomLevel,
+  } = useProjectStore();
 
-  const tools = [
-    { id: "select", icon: MousePointer2, name: "선택 도구", active: true },
-    { id: "frame", icon: Square, name: "프레임", active: false },
-    { id: "rectangle", icon: Square, name: "사각형", active: false },
-    { id: "circle", icon: Circle, name: "원", active: false },
-    { id: "triangle", icon: Triangle, name: "삼각형", active: false },
-    { id: "line", icon: Minus, name: "선", active: false },
-    { id: "pen", icon: Pen, name: "펜", active: false },
-    { id: "text", icon: Type, name: "텍스트", active: false },
-    { id: "image", icon: Image, name: "이미지", active: false },
-    { id: "hand", icon: Hand, name: "핸드 도구", active: false },
+  const tools: Array<{
+    id: ToolType;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    name: string;
+  }> = [
+    { id: "select", icon: MousePointer2, name: "선택 도구" },
+    { id: "frame", icon: Square, name: "프레임" },
+    { id: "rectangle", icon: Square, name: "사각형" },
+    { id: "circle", icon: Circle, name: "원" },
+    { id: "triangle", icon: Triangle, name: "삼각형" },
+    { id: "line", icon: Minus, name: "선" },
+    { id: "pen", icon: Pen, name: "펜" },
+    { id: "text", icon: Type, name: "텍스트" },
+    { id: "image", icon: Image, name: "이미지" },
+    { id: "hand", icon: Hand, name: "핸드 도구" },
   ];
+
+  const handleToolClick = (toolId: ToolType) => {
+    setActiveTool(toolId);
+  };
+
+  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value)) {
+      setZoomLevel(value);
+    }
+  };
 
   return (
     <div className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4">
@@ -54,8 +79,9 @@ export const Toolbar = () => {
           return (
             <button
               key={tool.id}
+              onClick={() => handleToolClick(tool.id)}
               className={`p-2 rounded-md transition-colors ${
-                tool.active
+                activeTool === tool.id
                   ? "bg-blue-500 text-white"
                   : "hover:bg-gray-200 text-gray-600"
               }`}
@@ -70,13 +96,27 @@ export const Toolbar = () => {
       {/* 오른쪽: 줌, 프리뷰, 공유 */}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1 bg-gray-50 rounded-lg p-1">
-          <button className="p-1 hover:bg-gray-200 rounded text-gray-600">
+          <button
+            onClick={zoomOut}
+            className="p-1 hover:bg-gray-200 rounded text-gray-600"
+            title="줌 아웃"
+          >
             <ZoomOut size={16} />
           </button>
-          <span className="text-sm text-gray-600 px-2 min-w-[60px] text-center">
-            100%
-          </span>
-          <button className="p-1 hover:bg-gray-200 rounded text-gray-600">
+          <input
+            type="number"
+            value={zoomLevel}
+            onChange={handleZoomChange}
+            className="text-sm text-gray-600 px-2 w-16 text-center bg-transparent border-none outline-none"
+            min="10"
+            max="500"
+          />
+          <span className="text-sm text-gray-600">%</span>
+          <button
+            onClick={zoomIn}
+            className="p-1 hover:bg-gray-200 rounded text-gray-600"
+            title="줌 인"
+          >
             <ZoomIn size={16} />
           </button>
         </div>

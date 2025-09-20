@@ -13,7 +13,7 @@ interface FrameCanvasProps {
 export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
-  const { components, selectedComponentId, selectComponent, isPreviewMode } =
+  const { components, selectedComponentId, selectComponent, isPreviewMode, zoomLevel } =
     useProjectStore();
 
   const [frameSize] = useState({ width: 680, height: 680 });
@@ -67,7 +67,13 @@ export const FrameCanvas = ({ onDrop }: FrameCanvasProps) => {
       >
         {/* 캔버스 중앙에 프레임 배치 */}
         <div className="min-w-full min-h-full flex items-center justify-center p-20">
-          <div className="relative">
+          <div 
+            className="relative"
+            style={{
+              transform: `scale(${zoomLevel / 100})`,
+              transformOrigin: 'center',
+            }}
+          >
             {/* 프레임 */}
             <div
               ref={frameRef}

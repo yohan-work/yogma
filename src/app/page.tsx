@@ -6,9 +6,13 @@ import { FrameCanvas } from "@/components/Canvas/FrameCanvas";
 import { EnhancedPropertyPanel } from "@/components/PropertyPanel/EnhancedPropertyPanel";
 import { useProjectStore } from "@/stores/useProjectStore";
 import type { ComponentType } from "@/types";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function Home() {
   const { addComponent } = useProjectStore();
+
+  // 키보드 단축키 활성화
+  useKeyboardShortcuts();
 
   const handleDragStart = (componentType: ComponentType) => {
     // 드래그 시작 시 필요한 로직이 있다면 여기에 추가
@@ -106,6 +110,8 @@ export default function Home() {
       properties: getDefaultProperties(componentType.type),
       states: defaultStates,
       currentState: "default",
+      visible: true,
+      locked: false,
     };
 
     addComponent(newComponent);

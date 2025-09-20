@@ -1,23 +1,36 @@
-import { create } from 'zustand';
-import type { ComponentInstance, FlowNode, ProjectState } from '@/types';
+import { create } from "zustand";
+import type {
+  ComponentInstance,
+  FlowNode,
+  ProjectState,
+  ToolType,
+} from "@/types";
 
 interface ProjectStore extends ProjectState {
   // 컴포넌트 관련 액션
-  addComponent: (component: Omit<ComponentInstance, 'id'>) => void;
+  addComponent: (component: Omit<ComponentInstance, "id">) => void;
   updateComponent: (id: string, updates: Partial<ComponentInstance>) => void;
   deleteComponent: (id: string) => void;
   selectComponent: (id: string | null) => void;
-  
+
   // 플로우 관련 액션
-  addFlowNode: (node: Omit<FlowNode, 'id'>) => void;
+  addFlowNode: (node: Omit<FlowNode, "id">) => void;
   updateFlowNode: (id: string, updates: Partial<FlowNode>) => void;
   deleteFlowNode: (id: string) => void;
-  
+
   // 모드 전환
   togglePreviewMode: () => void;
-  
+
   // Mock 데이터 관리
-  updateMockData: (data: ProjectState['mockData']) => void;
+  updateMockData: (data: ProjectState["mockData"]) => void;
+
+  // 도구 관리
+  setActiveTool: (tool: ToolType) => void;
+
+  // 줌 관리
+  setZoomLevel: (level: number) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
 }
 
 export const useProjectStore = create<ProjectStore>((set) => ({
@@ -27,6 +40,8 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   flowNodes: [],
   mockData: {},
   isPreviewMode: false,
+  activeTool: "select",
+  zoomLevel: 100,
 
   // 컴포넌트 관련 액션
   addComponent: (component) => {
@@ -50,7 +65,8 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   deleteComponent: (id) => {
     set((state) => ({
       components: state.components.filter((comp) => comp.id !== id),
-      selectedComponentId: state.selectedComponentId === id ? null : state.selectedComponentId,
+      selectedComponentId:
+        state.selectedComponentId === id ? null : state.selectedComponentId,
     }));
   },
 
@@ -93,5 +109,27 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   // Mock 데이터 관리
   updateMockData: (data) => {
     set({ mockData: data });
+  },
+
+  // 도구 관리
+  setActiveTool: (tool) => {
+    set({ activeTool: tool });
+  },
+
+  // 줌 관리
+  setZoomLevel: (level) => {
+    set({ zoomLevel: Math.max(10, Math.min(500, level)) });
+  },
+
+  zoomIn: () => {
+    set((state) => ({
+      zoomLevel: Math.min(500, state.zoomLevel + 10),
+    }));
+  },
+
+  zoomOut: () => {
+    set((state) => ({
+      zoomLevel: Math.max(10, state.zoomLevel - 10),
+    }));
   },
 }));

@@ -1,6 +1,8 @@
+import React, { useState, useRef } from "react";
 import type { ComponentInstance } from "@/types";
 import type { MouseEvent } from "react";
 import Image from "next/image";
+import { useProjectStore } from "@/stores/useProjectStore";
 
 interface CanvasComponentProps {
   component: ComponentInstance;
@@ -15,12 +17,69 @@ export const CanvasComponent = ({
   isPreviewMode,
   onSelect,
 }: CanvasComponentProps) => {
+  const { updateComponent } = useProjectStore();
+  const [isResizing, setIsResizing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const componentRef = useRef<HTMLDivElement>(null);
+
   const handleClick = (e: MouseEvent) => {
     e.stopPropagation();
-    if (!isPreviewMode) {
+    if (!isPreviewMode && !component.locked) {
       onSelect();
     }
   };
+
+  const handleMouseDown = (e: MouseEvent) => {
+    if (isPreviewMode || !isSelected || component.locked) return;
+
+    e.stopPropagation();
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - component.x,
+      y: e.clientY - component.y,
+    });
+  };
+
+  const handleResizeMouseDown = (e: MouseEvent) => {
+    if (isPreviewMode || component.locked) return;
+
+    e.stopPropagation();
+    setIsResizing(true);
+  };
+
+  // 전역 마우스 이벤트 처리
+  React.useEffect(() => {
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
+      if (isDragging) {
+        const newX = e.clientX - dragStart.x;
+        const newY = e.clientY - dragStart.y;
+        updateComponent(component.id, { x: newX, y: newY });
+      } else if (isResizing) {
+        const rect = componentRef.current?.getBoundingClientRect();
+        if (rect) {
+          const newWidth = Math.max(20, e.clientX - rect.left);
+          const newHeight = Math.max(20, e.clientY - rect.top);
+          updateComponent(component.id, { width: newWidth, height: newHeight });
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setIsResizing(false);
+    };
+
+    if (isDragging || isResizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, isResizing, dragStart, component.id, updateComponent]);
 
   const renderComponent = () => {
     const { type, properties } = component;
@@ -122,11 +181,23 @@ export const CanvasComponent = ({
     }
   };
 
+  // 컴포넌트가 숨겨진 경우 렌더링하지 않음
+  if (!component.visible) {
+    return null;
+  }
+
   return (
     <div
-      className={`absolute cursor-pointer ${
+      ref={componentRef}
+      className={`absolute ${
+        component.locked
+          ? "cursor-not-allowed"
+          : isDragging
+          ? "cursor-grabbing"
+          : "cursor-pointer"
+      } ${
         isSelected && !isPreviewMode ? "ring-2 ring-blue-500 ring-offset-2" : ""
-      }`}
+      } ${component.locked ? "opacity-70" : ""}`}
       style={{
         left: component.x,
         top: component.y,
@@ -134,6 +205,7 @@ export const CanvasComponent = ({
         height: component.height,
       }}
       onClick={handleClick}
+      onMouseDown={handleMouseDown}
     >
       {renderComponent()}
 
@@ -141,7 +213,10 @@ export const CanvasComponent = ({
       {isSelected && !isPreviewMode && (
         <>
           {/* 리사이즈 핸들 */}
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize" />
+          <div
+            className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white rounded-sm cursor-se-resize hover:bg-blue-600 transition-colors"
+            onMouseDown={handleResizeMouseDown}
+          />
 
           {/* 컴포넌트 라벨 */}
           <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded">

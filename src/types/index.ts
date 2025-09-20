@@ -58,6 +58,8 @@ export interface ComponentInstance {
   properties: ComponentProperties;
   states: ComponentState[];
   currentState: string;
+  visible: boolean;
+  locked: boolean;
 }
 
 // 컴포넌트 상태 정의
@@ -87,6 +89,9 @@ export interface MockData {
   [key: string]: string | number | boolean | MockData[] | MockData;
 }
 
+// 도구 타입 정의
+export type ToolType = 'select' | 'frame' | 'rectangle' | 'circle' | 'triangle' | 'line' | 'pen' | 'text' | 'image' | 'hand';
+
 // 프로젝트 전체 상태
 export interface ProjectState {
   components: ComponentInstance[];
@@ -94,6 +99,8 @@ export interface ProjectState {
   flowNodes: FlowNode[];
   mockData: MockData;
   isPreviewMode: boolean;
+  activeTool: ToolType;
+  zoomLevel: number;
 }
 
 // 드래그앤드롭 관련

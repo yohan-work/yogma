@@ -4,8 +4,16 @@ import { Eye, EyeOff, Lock, Unlock, MoreHorizontal } from "lucide-react";
 import { useProjectStore } from "@/stores/useProjectStore";
 
 export const LayersPanel = () => {
-  const { components, selectedComponentId, selectComponent } =
+  const { components, selectedComponentId, selectComponent, updateComponent } =
     useProjectStore();
+
+  const toggleVisibility = (componentId: string, currentVisible: boolean) => {
+    updateComponent(componentId, { visible: !currentVisible });
+  };
+
+  const toggleLock = (componentId: string, currentLocked: boolean) => {
+    updateComponent(componentId, { locked: !currentLocked });
+  };
 
   return (
     <div className="w-full bg-white border-t border-gray-200">
@@ -44,11 +52,33 @@ export const LayersPanel = () => {
 
                 {/* 컨트롤 버튼들 */}
                 <div className="flex items-center gap-1">
-                  <button className="p-1 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Eye size={12} className="text-gray-500" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleVisibility(component.id, component.visible);
+                    }}
+                    className="p-1 hover:bg-gray-200 rounded transition-opacity"
+                    title={component.visible ? "숨기기" : "보이기"}
+                  >
+                    {component.visible ? (
+                      <Eye size={12} className="text-gray-500" />
+                    ) : (
+                      <EyeOff size={12} className="text-gray-400" />
+                    )}
                   </button>
-                  <button className="p-1 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Unlock size={12} className="text-gray-500" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleLock(component.id, component.locked);
+                    }}
+                    className="p-1 hover:bg-gray-200 rounded transition-opacity"
+                    title={component.locked ? "잠금 해제" : "잠금"}
+                  >
+                    {component.locked ? (
+                      <Lock size={12} className="text-gray-500" />
+                    ) : (
+                      <Unlock size={12} className="text-gray-400" />
+                    )}
                   </button>
                   <button className="p-1 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                     <MoreHorizontal size={12} className="text-gray-500" />
