@@ -18,7 +18,7 @@ export const useKeyboardShortcuts = () => {
         activeElement &&
         (activeElement.tagName === "INPUT" ||
           activeElement.tagName === "TEXTAREA" ||
-          activeElement.contentEditable === "true");
+          (activeElement as HTMLElement).contentEditable === "true");
 
       if (isInputFocused) {
         return; // 입력 필드에 포커스가 있으면 단축키 실행하지 않음

@@ -72,25 +72,6 @@ export const ComponentLibrary = ({ onDragStart }: ComponentLibraryProps) => {
           );
         })}
       </div>
-
-      <div className="mt-8">
-        <h3 className="text-md font-semibold text-gray-800 mb-3">템플릿</h3>
-        <div className="space-y-2">
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-            <span className="text-sm font-medium text-blue-700">로그인 폼</span>
-          </div>
-          <div className="p-3 bg-green-50 rounded-lg border border-green-200 cursor-pointer hover:bg-green-100 transition-colors">
-            <span className="text-sm font-medium text-green-700">
-              회원가입 폼
-            </span>
-          </div>
-          <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 cursor-pointer hover:bg-purple-100 transition-colors">
-            <span className="text-sm font-medium text-purple-700">
-              대시보드 카드
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
