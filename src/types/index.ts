@@ -18,6 +18,15 @@ export interface ComponentType {
 // 컴포넌트 속성 타입들
 export interface BaseComponentProperties {
   [key: string]: string | number | boolean | undefined;
+  // 공통 스타일 속성
+  opacity?: number;
+  overflow?: "visible" | "hidden" | "scroll" | "auto";
+  borderRadius?: number;
+  backgroundColor?: string;
+  borderWidth?: number;
+  borderColor?: string;
+  borderStyle?: "solid" | "dashed" | "dotted" | "none";
+  boxShadow?: string;
 }
 
 export interface TextProperties extends BaseComponentProperties {

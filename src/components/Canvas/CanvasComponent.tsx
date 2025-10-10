@@ -159,12 +159,26 @@ export const CanvasComponent = ({
       return value !== undefined ? value : defaultValue;
     };
 
+    // 공통 스타일 객체 생성
+    const commonStyle: React.CSSProperties = {
+      backgroundColor: getProp("backgroundColor") as string | undefined,
+      borderRadius: `${getProp("borderRadius", 0)}px`,
+      border: getProp("borderWidth")
+        ? `${getProp("borderWidth")}px ${getProp(
+            "borderStyle",
+            "solid"
+          )} ${getProp("borderColor", "#000000")}`
+        : undefined,
+      boxShadow: (getProp("boxShadow") as string) || undefined,
+    };
+
     switch (type) {
       case "text":
         return (
           <div
             className="p-2 text-gray-800 w-full h-full flex items-center"
             style={{
+              ...commonStyle,
               fontSize: getProp("fontSize", "14px") as string,
               color: getProp("color", "#374151") as string,
               fontWeight: getProp("fontWeight", "normal") as string,
@@ -206,7 +220,10 @@ export const CanvasComponent = ({
             }`}
             disabled={getProp("disabled", false) as boolean}
             style={{
-              backgroundColor: getProp("backgroundColor", "#3b82f6") as string,
+              ...commonStyle,
+              backgroundColor:
+                commonStyle.backgroundColor ||
+                (getProp("backgroundColor", "#3b82f6") as string),
               color: getProp("textColor", "#ffffff") as string,
             }}
           >
@@ -226,6 +243,7 @@ export const CanvasComponent = ({
             }`}
             disabled={getProp("disabled", false) as boolean}
             style={{
+              ...commonStyle,
               width: getProp("width", "200px") as string,
             }}
           />
@@ -236,6 +254,7 @@ export const CanvasComponent = ({
           <div
             className="bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center relative"
             style={{
+              ...commonStyle,
               width: getProp("width", "150px") as string,
               height: getProp("height", "100px") as string,
             }}
@@ -260,12 +279,10 @@ export const CanvasComponent = ({
           <div
             className="w-full h-full"
             style={{
-              backgroundColor: getProp("backgroundColor", "#f3f4f6") as string,
-              border: `${getProp("borderWidth", 1)}px solid ${getProp(
-                "borderColor",
-                "#d1d5db"
-              )}`,
-              borderRadius: `${getProp("borderRadius", 4)}px`,
+              ...commonStyle,
+              backgroundColor:
+                commonStyle.backgroundColor ||
+                (getProp("backgroundColor", "#f3f4f6") as string),
             }}
           />
         );
@@ -275,11 +292,10 @@ export const CanvasComponent = ({
           <div
             className="w-full h-full"
             style={{
-              backgroundColor: getProp("backgroundColor", "#f3f4f6") as string,
-              border: `${getProp("borderWidth", 1)}px solid ${getProp(
-                "borderColor",
-                "#d1d5db"
-              )}`,
+              ...commonStyle,
+              backgroundColor:
+                commonStyle.backgroundColor ||
+                (getProp("backgroundColor", "#f3f4f6") as string),
               borderRadius: "50%",
             }}
           />
@@ -290,6 +306,7 @@ export const CanvasComponent = ({
           <div
             className="w-full h-full flex items-center justify-center"
             style={{
+              ...commonStyle,
               backgroundColor: "transparent",
             }}
           >
@@ -299,10 +316,10 @@ export const CanvasComponent = ({
                 height: 0,
                 borderLeft: `${component.width / 2}px solid transparent`,
                 borderRight: `${component.width / 2}px solid transparent`,
-                borderBottom: `${component.height}px solid ${getProp(
-                  "backgroundColor",
-                  "#f3f4f6"
-                )}`,
+                borderBottom: `${component.height}px solid ${
+                  commonStyle.backgroundColor ||
+                  getProp("backgroundColor", "#f3f4f6")
+                }`,
               }}
             />
           </div>
@@ -320,7 +337,9 @@ export const CanvasComponent = ({
               className="w-full"
               style={{
                 height: `${getProp("strokeWidth", 2)}px`,
-                backgroundColor: getProp("strokeColor", "#374151") as string,
+                backgroundColor:
+                  commonStyle.backgroundColor ||
+                  (getProp("strokeColor", "#374151") as string),
               }}
             />
           </div>
@@ -360,6 +379,11 @@ export const CanvasComponent = ({
         top: component.y,
         width: component.width,
         height: component.height,
+        opacity:
+          component.properties.opacity !== undefined
+            ? (component.properties.opacity as number)
+            : 1,
+        overflow: (component.properties.overflow as string) || "visible",
         pointerEvents: component.groupId && !isEditingText ? "none" : "auto",
         zIndex: isEditingText ? 20 : component.groupId ? 1 : 5,
       }}

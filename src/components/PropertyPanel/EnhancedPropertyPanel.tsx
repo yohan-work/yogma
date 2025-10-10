@@ -161,6 +161,146 @@ export const EnhancedPropertyPanel = () => {
     [selectedComponent, updateProperty]
   );
 
+  // 스타일 속성 업데이트 함수들
+  const handleOpacityChange = useCallback(
+    (value: string) => {
+      if (selectedComponent) {
+        const opacity = parseFloat(value);
+        if (!isNaN(opacity) && opacity >= 0 && opacity <= 1) {
+          updateProperty("opacity", opacity);
+        }
+      }
+    },
+    [selectedComponent, updateProperty]
+  );
+
+  const handleOverflowChange = useCallback(
+    (value: string) => {
+      if (selectedComponent) {
+        updateProperty("overflow", value);
+      }
+    },
+    [selectedComponent, updateProperty]
+  );
+
+  const handleRadiusChange = useCallback(
+    (value: string) => {
+      if (selectedComponent) {
+        updateProperty("borderRadius", parseInt(value) || 0);
+      }
+    },
+    [selectedComponent, updateProperty]
+  );
+
+  const handleVisibleChange = useCallback(
+    (visible: boolean) => {
+      if (selectedComponent) {
+        updateComponent(selectedComponent.id, { visible });
+      }
+    },
+    [selectedComponent, updateComponent]
+  );
+
+  const handleBackgroundColorChange = useCallback(
+    (value: string) => {
+      if (selectedComponent) {
+        updateProperty("backgroundColor", value);
+      }
+    },
+    [selectedComponent, updateProperty]
+  );
+
+  const handleBorderWidthChange = useCallback(
+    (value: string) => {
+      if (selectedComponent) {
+        updateProperty("borderWidth", parseInt(value) || 0);
+      }
+    },
+    [selectedComponent, updateProperty]
+  );
+
+  const handleBorderColorChange = useCallback(
+    (value: string) => {
+      if (selectedComponent) {
+        updateProperty("borderColor", value);
+      }
+    },
+    [selectedComponent, updateProperty]
+  );
+
+  const handleBorderStyleChange = useCallback(
+    (value: string) => {
+      if (selectedComponent) {
+        updateProperty("borderStyle", value);
+      }
+    },
+    [selectedComponent, updateProperty]
+  );
+
+  // Shadow 관련 상태와 핸들러
+  const [shadowConfig, setShadowConfig] = useState({
+    x: 0,
+    y: 4,
+    blur: 6,
+    spread: 0,
+    color: "#00000026",
+  });
+
+  // Shadow 속성을 파싱하는 함수
+  const parseShadow = useCallback((boxShadow: string | undefined) => {
+    if (!boxShadow || boxShadow === "none") {
+      return { x: 0, y: 4, blur: 6, spread: 0, color: "#00000026" };
+    }
+    // 간단한 파싱: "2px 4px 6px 0px rgba(0,0,0,0.15)"
+    const parts = boxShadow.match(
+      /(-?\d+)px\s+(-?\d+)px\s+(-?\d+)px\s+(-?\d+)px\s+(.+)/
+    );
+    if (parts) {
+      return {
+        x: parseInt(parts[1]),
+        y: parseInt(parts[2]),
+        blur: parseInt(parts[3]),
+        spread: parseInt(parts[4]),
+        color: parts[5],
+      };
+    }
+    return { x: 0, y: 4, blur: 6, spread: 0, color: "#00000026" };
+  }, []);
+
+  // Shadow 상태 업데이트
+  React.useEffect(() => {
+    if (selectedComponent?.properties.boxShadow) {
+      setShadowConfig(
+        parseShadow(selectedComponent.properties.boxShadow as string)
+      );
+    }
+  }, [
+    selectedComponent?.id,
+    selectedComponent?.properties.boxShadow,
+    parseShadow,
+  ]);
+
+  const handleShadowChange = useCallback(
+    (key: keyof typeof shadowConfig, value: string | number) => {
+      const newShadow = { ...shadowConfig, [key]: value };
+      setShadowConfig(newShadow);
+
+      // boxShadow 문자열 생성
+      const boxShadowValue = `${newShadow.x}px ${newShadow.y}px ${newShadow.blur}px ${newShadow.spread}px ${newShadow.color}`;
+      if (selectedComponent) {
+        updateProperty("boxShadow", boxShadowValue);
+      }
+    },
+    [shadowConfig, selectedComponent, updateProperty]
+  );
+
+  const removeShadow = useCallback(() => {
+    if (selectedComponent) {
+      updateProperty("boxShadow", "none");
+      setShadowConfig({ x: 0, y: 4, blur: 6, spread: 0, color: "#00000026" });
+    }
+  }, [selectedComponent, updateProperty]);
+
   const toggleSection = useCallback(
     (section: keyof typeof expandedSections) => {
       setExpandedSections((prev) => ({
@@ -366,16 +506,32 @@ export const EnhancedPropertyPanel = () => {
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-600">Visible</span>
               <div className="flex bg-gray-100 rounded-lg p-1">
-                <button className="px-3 py-1 text-xs bg-white rounded shadow-sm">
+                <button
+                  onClick={() => handleVisibleChange(true)}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    selectedComponent.visible
+                      ? "bg-white shadow-sm text-gray-900"
+                      : "text-gray-500"
+                  }`}
+                >
                   Yes
                 </button>
-                <button className="px-3 py-1 text-xs text-gray-500">No</button>
+                <button
+                  onClick={() => handleVisibleChange(false)}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    !selectedComponent.visible
+                      ? "bg-white shadow-sm text-gray-900"
+                      : "text-gray-500"
+                  }`}
+                >
+                  No
+                </button>
               </div>
             </div>
             <InputField
               label="Opacity"
-              value="1"
-              onChange={() => {}}
+              value={(properties.opacity as number) ?? 1}
+              onChange={handleOpacityChange}
               type="number"
             />
             <div>
@@ -383,6 +539,8 @@ export const EnhancedPropertyPanel = () => {
                 Overflow
               </label>
               <select
+                value={(properties.overflow as string) || "visible"}
+                onChange={(e) => handleOverflowChange(e.target.value)}
                 onKeyDown={(e) => {
                   // 모든 키 이벤트의 전파를 완전히 차단
                   e.stopPropagation();
@@ -398,15 +556,16 @@ export const EnhancedPropertyPanel = () => {
                 onBlur={(e) => e.stopPropagation()}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option>Visible</option>
-                <option>Hidden</option>
-                <option>Scroll</option>
+                <option value="visible">Visible</option>
+                <option value="hidden">Hidden</option>
+                <option value="scroll">Scroll</option>
+                <option value="auto">Auto</option>
               </select>
             </div>
             <InputField
               label="Radius"
-              value="0"
-              onChange={() => {}}
+              value={(properties.borderRadius as number) ?? 0}
+              onChange={handleRadiusChange}
               type="number"
             />
           </div>
@@ -416,21 +575,206 @@ export const EnhancedPropertyPanel = () => {
         <SectionHeader title="Fill" section="fill">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-white border border-gray-300 rounded"></div>
-              <span className="text-sm text-gray-700">White</span>
-              <button className="ml-auto text-xs text-gray-500">—</button>
+              <input
+                type="color"
+                value={(properties.backgroundColor as string) || "#ffffff"}
+                onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
+                onFocus={(e) => e.stopPropagation()}
+                onBlur={(e) => e.stopPropagation()}
+                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+              />
+              <input
+                type="text"
+                value={(properties.backgroundColor as string) || "#ffffff"}
+                onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                  if (e.key === "Enter" || e.key === "Escape") {
+                    e.preventDefault();
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+                onFocus={(e) => e.stopPropagation()}
+                onBlur={(e) => e.stopPropagation()}
+                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="#ffffff"
+              />
             </div>
           </div>
         </SectionHeader>
 
         {/* Border */}
         <SectionHeader title="Border" section="border">
-          <div className="text-center text-gray-400 text-sm py-4">추가</div>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <InputField
+                label="Width"
+                value={(properties.borderWidth as number) ?? 0}
+                onChange={handleBorderWidthChange}
+                type="number"
+                suffix="px"
+              />
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">
+                  Style
+                </label>
+                <select
+                  value={(properties.borderStyle as string) || "solid"}
+                  onChange={(e) => handleBorderStyleChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    e.nativeEvent.stopImmediatePropagation();
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      (e.target as HTMLSelectElement).blur();
+                    }
+                  }}
+                  onFocus={(e) => e.stopPropagation()}
+                  onBlur={(e) => e.stopPropagation()}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="solid">Solid</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={(properties.borderColor as string) || "#000000"}
+                onChange={(e) => handleBorderColorChange(e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
+                onFocus={(e) => e.stopPropagation()}
+                onBlur={(e) => e.stopPropagation()}
+                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+              />
+              <input
+                type="text"
+                value={(properties.borderColor as string) || "#000000"}
+                onChange={(e) => handleBorderColorChange(e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                  if (e.key === "Enter" || e.key === "Escape") {
+                    e.preventDefault();
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+                onFocus={(e) => e.stopPropagation()}
+                onBlur={(e) => e.stopPropagation()}
+                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
         </SectionHeader>
 
         {/* Shadow */}
         <SectionHeader title="Shadow" section="shadow">
-          <div className="text-center text-gray-400 text-sm py-4">추가</div>
+          <div className="space-y-3">
+            {properties.boxShadow && properties.boxShadow !== "none" ? (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <InputField
+                    label="X Offset"
+                    value={shadowConfig.x}
+                    onChange={(v) => handleShadowChange("x", parseInt(v) || 0)}
+                    type="number"
+                    suffix="px"
+                  />
+                  <InputField
+                    label="Y Offset"
+                    value={shadowConfig.y}
+                    onChange={(v) => handleShadowChange("y", parseInt(v) || 0)}
+                    type="number"
+                    suffix="px"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <InputField
+                    label="Blur"
+                    value={shadowConfig.blur}
+                    onChange={(v) =>
+                      handleShadowChange("blur", parseInt(v) || 0)
+                    }
+                    type="number"
+                    suffix="px"
+                  />
+                  <InputField
+                    label="Spread"
+                    value={shadowConfig.spread}
+                    onChange={(v) =>
+                      handleShadowChange("spread", parseInt(v) || 0)
+                    }
+                    type="number"
+                    suffix="px"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={
+                      shadowConfig.color.startsWith("#")
+                        ? shadowConfig.color
+                        : "#000000"
+                    }
+                    onChange={(e) =>
+                      handleShadowChange("color", e.target.value)
+                    }
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                    }}
+                    onFocus={(e) => e.stopPropagation()}
+                    onBlur={(e) => e.stopPropagation()}
+                    className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={shadowConfig.color}
+                    onChange={(e) =>
+                      handleShadowChange("color", e.target.value)
+                    }
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                      if (e.key === "Enter" || e.key === "Escape") {
+                        e.preventDefault();
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                    onFocus={(e) => e.stopPropagation()}
+                    onBlur={(e) => e.stopPropagation()}
+                    className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Color"
+                  />
+                </div>
+                <button
+                  onClick={removeShadow}
+                  className="w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  Remove Shadow
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => handleShadowChange("x", 0)}
+                className="w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200"
+              >
+                Add Shadow
+              </button>
+            )}
+          </div>
         </SectionHeader>
 
         {/* Component-specific properties */}
