@@ -213,7 +213,7 @@ export const CanvasComponent = ({
       case "button":
         return (
           <button
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`w-full h-full px-4 py-2 rounded-lg font-medium transition-colors ${
               getProp("variant", "primary") === "secondary"
                 ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 : "bg-blue-500 text-white hover:bg-blue-600"
@@ -236,7 +236,7 @@ export const CanvasComponent = ({
           <input
             type={getProp("inputType", "text") as string}
             placeholder={getProp("placeholder", "입력하세요") as string}
-            className={`px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full h-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               getProp("hasError", false)
                 ? "border-red-500 bg-red-50"
                 : "border-gray-300 bg-white"
@@ -244,7 +244,6 @@ export const CanvasComponent = ({
             disabled={getProp("disabled", false) as boolean}
             style={{
               ...commonStyle,
-              width: getProp("width", "200px") as string,
             }}
           />
         );
@@ -252,11 +251,9 @@ export const CanvasComponent = ({
       case "image":
         return (
           <div
-            className="bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center relative"
+            className="w-full h-full bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center relative"
             style={{
               ...commonStyle,
-              width: getProp("width", "150px") as string,
-              height: getProp("height", "100px") as string,
             }}
           >
             {getProp("src", "") ? (
