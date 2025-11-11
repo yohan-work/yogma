@@ -47,7 +47,6 @@ export interface ButtonProperties extends BaseComponentProperties {
 export interface InputProperties extends BaseComponentProperties {
   placeholder?: string;
   inputType?: string;
-  width?: string;
   disabled?: boolean;
   hasError?: boolean;
 }
@@ -55,8 +54,6 @@ export interface InputProperties extends BaseComponentProperties {
 export interface ImageProperties extends BaseComponentProperties {
   src?: string;
   alt?: string;
-  width?: string;
-  height?: string;
 }
 
 export type ComponentProperties =
