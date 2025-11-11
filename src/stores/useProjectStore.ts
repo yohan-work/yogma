@@ -35,6 +35,7 @@ interface ProjectStore extends ProjectState {
   selectGroup: (id: string | null) => void;
   ungroupComponents: (groupId: string) => void;
   moveGroup: (groupId: string, deltaX: number, deltaY: number) => void;
+  resizeGroup: (groupId: string, newWidth: number, newHeight: number) => void;
 
   // 플로우 관련 액션
   addFlowNode: (node: Omit<FlowNode, "id">) => void;
@@ -329,6 +330,112 @@ export const useProjectStore = create<ProjectStore>((set) => ({
           ? { ...component, x: component.x + deltaX, y: component.y + deltaY }
           : component
       );
+
+      return {
+        ...state,
+        groups: state.groups.map((g) => (g.id === groupId ? updatedGroup : g)),
+        components: updatedComponents,
+      };
+    });
+  },
+
+  resizeGroup: (groupId, newWidth, newHeight) => {
+    set((state) => {
+      const group = state.groups.find((g) => g.id === groupId);
+      if (!group) return state;
+
+      // 최소 크기 제한
+      const minSize = 50;
+      newWidth = Math.max(minSize, newWidth);
+      newHeight = Math.max(minSize, newHeight);
+
+      // 원래 크기 대비 비율 계산
+      const scaleX = newWidth / group.width;
+      const scaleY = newHeight / group.height;
+
+      // 그룹에 속한 모든 컴포넌트들의 위치와 크기를 비율에 맞게 조정
+      const updatedComponents = state.components.map((component) => {
+        if (!group.componentIds.includes(component.id)) {
+          return component;
+        }
+
+        // 그룹 기준점에서의 상대 위치 계산
+        const relativeX = component.x - group.x;
+        const relativeY = component.y - group.y;
+
+        // 새로운 위치 계산 (비율 적용)
+        const newX = group.x + relativeX * scaleX;
+        const newY = group.y + relativeY * scaleY;
+
+        // 새로운 크기 계산 (비율 적용)
+        const newComponentWidth = component.width * scaleX;
+        const newComponentHeight = component.height * scaleY;
+
+        // 속성 중 픽셀 단위 값들을 비율에 맞게 조정
+        const scaleProperty = (value: unknown, scale: number): unknown => {
+          if (typeof value === "string" && value.endsWith("px")) {
+            const numValue = parseFloat(value);
+            return `${Math.round(numValue * scale)}px`;
+          }
+          if (typeof value === "number") {
+            return Math.round(value * scale);
+          }
+          return value;
+        };
+
+        const scaledProperties = { ...component.properties };
+
+        // fontSize 조정 (평균 비율 사용)
+        if (scaledProperties.fontSize) {
+          const avgScale = (scaleX + scaleY) / 2;
+          scaledProperties.fontSize = scaleProperty(
+            scaledProperties.fontSize,
+            avgScale
+          ) as string;
+        }
+
+        // borderRadius 조정
+        if (scaledProperties.borderRadius !== undefined) {
+          const avgScale = (scaleX + scaleY) / 2;
+          scaledProperties.borderRadius = scaleProperty(
+            scaledProperties.borderRadius,
+            avgScale
+          ) as number;
+        }
+
+        // borderWidth 조정
+        if (scaledProperties.borderWidth !== undefined) {
+          const avgScale = (scaleX + scaleY) / 2;
+          scaledProperties.borderWidth = scaleProperty(
+            scaledProperties.borderWidth,
+            avgScale
+          ) as number;
+        }
+
+        // strokeWidth 조정 (line 컴포넌트용)
+        if (scaledProperties.strokeWidth !== undefined) {
+          scaledProperties.strokeWidth = scaleProperty(
+            scaledProperties.strokeWidth,
+            scaleY
+          ) as number;
+        }
+
+        return {
+          ...component,
+          x: newX,
+          y: newY,
+          width: newComponentWidth,
+          height: newComponentHeight,
+          properties: scaledProperties,
+        };
+      });
+
+      // 그룹 크기 업데이트
+      const updatedGroup = {
+        ...group,
+        width: newWidth,
+        height: newHeight,
+      };
 
       return {
         ...state,
