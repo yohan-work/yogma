@@ -16,8 +16,9 @@ export const GroupComponent = ({
   isPreviewMode,
   onSelect,
 }: GroupComponentProps) => {
-  const { moveGroup } = useProjectStore();
+  const { moveGroup, resizeGroup } = useProjectStore();
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const groupRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +85,13 @@ export const GroupComponent = ({
     });
   };
 
+  const handleResizeMouseDown = (e: MouseEvent) => {
+    if (isPreviewMode || group.locked) return;
+
+    e.stopPropagation();
+    setIsResizing(true);
+  };
+
   // 전역 마우스 이벤트 처리
   React.useEffect(() => {
     const handleMouseMove = (e: globalThis.MouseEvent) => {
@@ -93,23 +101,54 @@ export const GroupComponent = ({
         const deltaX = newX - group.x;
         const deltaY = newY - group.y;
         moveGroup(group.id, deltaX, deltaY);
+      } else if (isResizing) {
+        const rect = groupRef.current?.getBoundingClientRect();
+        if (rect) {
+          // 그룹 컨테이너는 실제 그룹보다 5px 큰 패딩을 가지고 있음
+          // rect.left = group.x - 5의 화면 좌표
+          // 실제 그룹 시작점은 rect.left + 5
+          const newWidth = Math.max(50, e.clientX - (rect.left + 5));
+          const newHeight = Math.max(50, e.clientY - (rect.top + 5));
+          resizeGroup(group.id, newWidth, newHeight);
+        }
       }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      setIsResizing(false);
+      // 전역 커서 스타일 제거
+      document.body.style.cursor = "";
     };
 
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
+
+      // 전역 커서 스타일 적용
+      if (isDragging) {
+        document.body.style.cursor = "grabbing";
+      } else if (isResizing) {
+        document.body.style.cursor = "se-resize";
+      }
     }
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      // 클린업 시 전역 커서 스타일 제거
+      document.body.style.cursor = "";
     };
-  }, [isDragging, dragStart, group.id, group.x, group.y, moveGroup]);
+  }, [
+    isDragging,
+    isResizing,
+    dragStart,
+    group.id,
+    group.x,
+    group.y,
+    moveGroup,
+    resizeGroup,
+  ]);
 
   // 그룹이 숨겨진 경우 렌더링하지 않음
   if (!group.visible) {
@@ -134,6 +173,8 @@ export const GroupComponent = ({
         className={`w-full h-full border-2 border-dashed rounded-lg ${
           group.locked
             ? "cursor-not-allowed"
+            : isResizing
+            ? "cursor-se-resize"
             : isDragging
             ? "cursor-grabbing"
             : "cursor-pointer"
@@ -149,9 +190,17 @@ export const GroupComponent = ({
 
       {/* 그룹 라벨 */}
       {isSelected && !isPreviewMode && (
-        <div className="absolute -top-8 left-0 bg-primary-600 text-white text-xs px-2 py-1 rounded-md shadow-sm pointer-events-none font-medium">
-          {group.name}
-        </div>
+        <>
+          <div className="absolute -top-8 left-0 bg-primary-600 text-white text-xs px-2 py-1 rounded-md shadow-sm pointer-events-none font-medium">
+            {group.name}
+          </div>
+
+          {/* 리사이즈 핸들 */}
+          <div
+            className="absolute -bottom-1 -right-1 w-3 h-3 bg-primary-600 border border-neutral-0 rounded-sm cursor-se-resize hover:bg-primary-700 transition-colors"
+            onMouseDown={handleResizeMouseDown}
+          />
+        </>
       )}
     </div>
   );
